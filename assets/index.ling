@@ -17,6 +17,8 @@
 
 {@./DICT.html link to dict}
 
+{@#lists id link}
+
 *italics*
 ^bold^
 _underline_
@@ -43,3 +45,5 @@ table   |:/ example |:' header
 these   | are       | cells
 another | row
 }
+
+{@#title back to top}

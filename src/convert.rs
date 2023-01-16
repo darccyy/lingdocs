@@ -1,6 +1,8 @@
 use html_escape::encode_text as escape_html;
 use regex::Regex;
 
+use crate::case;
+
 pub fn ling_to_html(file: &str) -> String {
     use ListType::*;
 
@@ -44,8 +46,9 @@ pub fn ling_to_html(file: &str) -> String {
         let maybe_push = match token {
             // Header
             c if Regex::new(r"^#+$").unwrap().is_match(&c) => Some(format!(
-                r#"<h{d} class="header"> {} </h{d}>"#,
+                r#"<h{d} class="header" id="{id}"> {} </h{d}>"#,
                 escape_html(rest),
+                id = case::kebab_ascii(rest.trim()),
                 d = c.len() + 1,
             )),
 
@@ -292,7 +295,6 @@ fn format_table(text: &str) -> String {
                 if cell.starts_with(':') {
                     chars.next();
                     if let Some(ch) = chars.next() {
-                        println!("{:?}", Format::from(ch));
                         push_format = Some(Format::from(ch));
                     }
                 }
