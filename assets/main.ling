@@ -4,7 +4,7 @@
 {'iv lang text  }
 {/   broad ipa  }
 {[   narrow ipa }
-{<   phoner     }
+{*   phoner     }
 {$   replace    }
 {#   comment    }
 {    no change  }
@@ -16,7 +16,7 @@
 
 # syntax examples
 
-<link to dict | ./DICT.html>
+{@./DICT.html | link to dict}
 
 *italics*
 ^bold^

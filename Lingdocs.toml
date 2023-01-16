@@ -4,9 +4,13 @@ code = "iv"
 author = "darcy"
 translations = [["eo", "esperanto"], ["en", "english"]]
 
-[files]
-build = "./build/"
-src = "./assets/"
-main = "main.ling"
-phoner = "phoner"
-dict = "dict.dlst"
+[options]
+minify = false
+
+# [files]
+# build = "./build/"
+# source = "./assets/"
+# main = "main.ling"
+# phoner = "phoner"
+# dict = "dict.dlst"
+# template = "template.html"
