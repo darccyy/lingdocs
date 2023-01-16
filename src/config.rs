@@ -52,7 +52,7 @@ impl Default for Files {
         Files {
             build: String::from("./build/"),
             source: String::from("./assets/"),
-            main: String::from("main.ling"),
+            main: String::from("index.ling"),
             phoner: String::from("phoner"),
             dict: String::from("dict.dlst"),
             template: String::from("template.html"),

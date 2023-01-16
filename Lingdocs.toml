@@ -10,7 +10,7 @@ minify = false
 # [files]
 # build = "./build/"
 # source = "./assets/"
-# main = "main.ling"
+# main = "index.ling"
 # phoner = "phoner"
 # dict = "dict.dlst"
 # template = "template.html"
