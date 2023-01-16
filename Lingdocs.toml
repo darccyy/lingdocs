@@ -1,6 +1,6 @@
 [package]
-name = "ivalingo"
-code = "iv"
+name = "example"
+code = "ex"
 author = "darcy"
 translations = [["eo", "esperanto"], ["en", "english"]]
 

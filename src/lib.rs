@@ -1,3 +1,4 @@
+mod case;
 mod compile;
 mod config;
 mod convert;

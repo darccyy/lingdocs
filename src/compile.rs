@@ -2,7 +2,7 @@ use std::{error::Error, fs, path::Path};
 
 use regex::Regex;
 
-use crate::{convert, utils::separate_filename_ext, Config, MyError};
+use crate::{case, convert, utils::separate_filename_ext, Config, MyError};
 
 pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
     // Remove build directory
@@ -12,7 +12,7 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
 
     // Template file
     let template_html = if Path::new(&config.files.template).exists() {
-        Some(fs::read_to_string(config.files.template)?)
+        Some(fs::read_to_string(&config.files.template)?)
     } else {
         None
     };
@@ -20,7 +20,7 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
     let mut files: Vec<(String, String)> = Vec::new();
 
     // ? Merge these 2 loops ?
-    for entry in fs::read_dir(config.files.source)?.flatten() {
+    for entry in fs::read_dir(&config.files.source)?.flatten() {
         // Throw if not file
         if !entry.path().is_file() {
             return Err(Box::new(MyError(
@@ -44,7 +44,7 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
 
         match ext {
             "ling" => {
-                *file = use_template_html(convert::ling_to_html(file), &template_html);
+                *file = use_template_html(convert::ling_to_html(file), &template_html, &config);
                 *filepath = filepath_no_ext + ".html";
             }
 
@@ -58,14 +58,20 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn use_template_html(file: String, template: &Option<String>) -> String {
+fn use_template_html(file: String, template: &Option<String>, config: &Config) -> String {
     if let Some(template) = template {
         //TODO Use lazy_static for regex
         // ? Use replace_all ?
-        Regex::new(r"\{\$\s*BODY\s*\}")
+        let html = Regex::new(r"\{\$\s*BODY\s*\}")
             .unwrap()
             .replace(template, &file)
-            .to_string()
+            .to_string();
+        let html = Regex::new(r"\{\$\s*TITLE\s*\}")
+            .unwrap()
+            //TODO Fix title
+            .replace(&html, case::upper_first(&config.package.name))
+            .to_string();
+        html
     } else {
         file
     }
