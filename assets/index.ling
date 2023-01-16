@@ -39,7 +39,7 @@ after list
 ### table
 
 {|
-table   |:/ example | header
+table   |:/ example |:' header
 these   | are       | cells
 another | row
 }
