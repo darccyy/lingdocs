@@ -1,13 +1,14 @@
 [package]
-name = "example"
+name = "examplelang"
 code = "ex"
 author = "darcy"
 translations = [["eo", "esperanto"], ["en", "english"]]
 
 [options]
-minify = false
+# minify = false
 
-# [files]
+[files]
+style = "style.scss"
 # build = "./build/"
 # source = "./assets/"
 # main = "index.ling"

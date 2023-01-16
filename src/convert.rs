@@ -46,7 +46,7 @@ pub fn ling_to_html(file: &str) -> String {
             c if Regex::new(r"^#+$").unwrap().is_match(&c) => Some(format!(
                 r#"<h{d} class="header"> {} </h{d}>"#,
                 escape_html(rest),
-                d = c.len(),
+                d = c.len() + 1,
             )),
 
             // Quote or note
@@ -175,7 +175,6 @@ fn format_statements(body: &str) -> String {
                     } else {
                         output.push_str(&stat);
                     }
-                    println!("{}", output);
 
                     statement = None;
                     curr_statement = None;

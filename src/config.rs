@@ -45,6 +45,7 @@ pub struct Files {
     pub phoner: String,
     pub dict: String,
     pub template: String,
+    pub style: Option<String>,
 }
 
 impl Default for Files {
@@ -56,6 +57,7 @@ impl Default for Files {
             phoner: String::from("phoner"),
             dict: String::from("dict.dlst"),
             template: String::from("template.html"),
+            style: None,
         }
     }
 }
