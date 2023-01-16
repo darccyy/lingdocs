@@ -52,8 +52,6 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
 
             _ => return Err(Box::new(MyError("Unknown file type".to_string()))),
         }
-
-        // println!("{}", format!("{}/{}", config.files.build, filepath));
         fs::write(format!("{}/{}", config.files.build, filepath), file)?;
     }
 

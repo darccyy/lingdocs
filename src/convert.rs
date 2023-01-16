@@ -1,17 +1,16 @@
 use html_escape::encode_text as escape_html;
 use regex::Regex;
 
-use ListType::*;
-
-/// Kind of HTML list
-#[allow(dead_code)]
-enum ListType {
-    NoList,
-    Unordered,
-    Ordered,
-}
-
 pub fn ling_to_html(file: &str) -> String {
+    use ListType::*;
+
+    /// Kind of HTML list
+    enum ListType {
+        NoList,
+        Unordered,
+        Ordered,
+    }
+
     // Standardize linebreaks
     let file = file.replace("\r\n", "\n");
 
@@ -45,13 +44,16 @@ pub fn ling_to_html(file: &str) -> String {
         let maybe_push = match token {
             // Header
             c if Regex::new(r"^#+$").unwrap().is_match(&c) => Some(format!(
-                "<h{d}> {} </h{d}>",
+                r#"<h{d} class="header"> {} </h{d}>"#,
                 escape_html(rest),
-                d = c.len() + 1,
+                d = c.len(),
             )),
 
             // Quote or note
-            ">" => Some(format!("<blockquote> {} </blockquote>", escape_html(rest))),
+            ">" => Some(format!(
+                r#"<blockquote class="quote"> {} </blockquote>"#,
+                escape_html(rest)
+            )),
 
             // Hr
             "---" => Some("<hr />".to_string()),
@@ -60,9 +62,9 @@ pub fn ling_to_html(file: &str) -> String {
             "-" => {
                 // Add opening list tag if not active, and close other previous list if active
                 let parent = match curr_list {
-                    NoList => "<ul>",
+                    NoList => "<ul class=\"list\">\n",
                     Ordered => "",
-                    Unordered => "</ol>\n<ul>\n",
+                    Unordered => "</ol>\n<ul class=\"list\">\n",
                 };
                 curr_list = Ordered;
 
@@ -73,20 +75,23 @@ pub fn ling_to_html(file: &str) -> String {
             "." => {
                 // Add opening list tag if not active, and close other previous list if active
                 let parent = match curr_list {
-                    NoList => "<ol>",
-                    Ordered => "</ul>\n<ol>\n",
+                    NoList => "<ol class=\"list\">\n",
+                    Ordered => "</ul>\n<ol class=\"list\">\n",
                     Unordered => "",
                 };
                 curr_list = Unordered;
 
-                Some(format!("{parent}<li> {} </li>", escape_html(rest)))
+                Some(format!(
+                    r#"{parent}<li class="item"> {} </li>"#,
+                    escape_html(rest)
+                ))
             }
 
             // Normal line
             _ => {
                 let s = line.trim();
                 if !s.is_empty() {
-                    Some(format!("<p> {} </p>\n", escape_html(s)))
+                    Some(format!("<p class=\"line\"> {} </p>\n", escape_html(s)))
                 } else {
                     None
                 }
@@ -98,7 +103,203 @@ pub fn ling_to_html(file: &str) -> String {
         }
     }
 
-    body.join("\n")
+    let body = format_statements(&body.join("\n"));
+    
+    let body = format_primatives(&body);
+
+    body
+}
+
+fn format_statements(body: &str) -> String {
+    use Statement::*;
+
+    enum Statement {
+        Text(String),
+        BroadIPA,
+        NarrowIPA,
+        Phoner,
+        Replace,
+        Table,
+        Comment,
+        Unknown,
+    }
+    let mut curr_statement: Option<Statement> = None;
+    let mut curr_statement_building = false;
+
+    // Build variables
+    let mut output = String::new();
+    let mut statement: Option<String> = None;
+    let mut is_escaped = false;
+
+    for ch in body.chars() {
+        if is_escaped {
+            output.push(ch);
+        } else {
+            match ch {
+                '\\' => (),
+
+                '{' if statement.is_none() => {
+                    statement = Some(String::new());
+                }
+
+                '}' if statement.is_some() => {
+                    // Unwrap should not fail
+                    let stat = statement.unwrap();
+                    let stat = stat.trim();
+
+                    if let Some(curr_statement) = &curr_statement {
+                        output.push_str(&match curr_statement {
+                            Text(lang) => format!(
+                                "<span class=\"language\">\
+                                    <span class=\"name\"> {lang} </span>\
+                                    <span class=\"text\"> {stat} </span>\
+                                </span>"
+                            ),
+                            BroadIPA => format!(r#"<span class="ipa broad"> /{}/ </span>"#, stat),
+                            NarrowIPA => format!(r#"<span class="ipa narrow"> [{}] </span>"#, stat),
+                            Phoner => format!(r#"<code class="phoner"> {} </code>"#, stat),
+                            // Double $ to not confuse regex later
+                            Replace => format!("{{$${}}}", stat),
+                            Table => format!("(&lt;table&gt;){}(&lt;/table&gt;)", stat),
+                            Comment => String::new(),
+                            Unknown => format!("{}", stat),
+                        });
+                    } else {
+                        output.push_str(&stat);
+                    }
+                    println!("{}", output);
+
+                    statement = None;
+                    curr_statement = None;
+                }
+
+                _ => {
+                    if let Some(stat) = &mut statement {
+                        if let None = curr_statement {
+                            curr_statement = Some(match ch {
+                                '\'' => {
+                                    curr_statement_building = true;
+                                    Text(String::new())
+                                }
+                                '/' => BroadIPA,
+                                '[' => NarrowIPA,
+                                '*' => Phoner,
+                                '$' => Replace,
+                                '#' => Comment,
+                                '|' => Table,
+                                _ => Unknown,
+                            })
+                        } else {
+                            //TODO Tidy this cringe code
+                            if curr_statement_building {
+                                if let Some(Text(text)) = &mut curr_statement {
+                                    if ch == ' ' {
+                                        curr_statement_building = false;
+                                    } else {
+                                        text.push(ch);
+                                    }
+                                } else {
+                                    curr_statement_building = false;
+                                }
+                            } else {
+                                stat.push(ch);
+                            }
+                        }
+                    } else {
+                        output.push(ch);
+                    }
+                }
+            }
+        }
+
+        // Escape next character
+        if ch == '\\' && !is_escaped {
+            is_escaped = true;
+        } else {
+            is_escaped = false;
+        }
+    }
+
+    output
+}
+
+fn format_primatives(body: &str) -> String {
+    #[derive(Default)]
+    /// Types of primative formats
+    struct Primatives {
+        italic: bool,
+        bold: bool,
+        underline: bool,
+        strike: bool,
+    }
+    let mut prims = Primatives::default();
+
+    // Build variables
+    let mut output = String::new();
+    let mut is_escaped = false;
+
+    for ch in body.chars() {
+        if is_escaped {
+            output.push(ch);
+        } else {
+            match ch {
+                // Non-escaped slash
+                '\\' => (),
+
+                // Italic
+                '*' => {
+                    output.push_str(if prims.italic {
+                        "</i>"
+                    } else {
+                        r#"<i class="italics">"#
+                    });
+                    prims.italic = !prims.italic;
+                }
+
+                // Bold
+                '^' => {
+                    output.push_str(if prims.bold {
+                        "</b>"
+                    } else {
+                        r#"<b class="bold">"#
+                    });
+                    prims.bold = !prims.bold;
+                }
+
+                // Underline
+                '_' => {
+                    output.push_str(if prims.underline {
+                        "</u>"
+                    } else {
+                        r#"<u class="underline">"#
+                    });
+                    prims.underline = !prims.underline;
+                }
+
+                // Strike
+                '~' => {
+                    output.push_str(if prims.strike {
+                        "</strike>"
+                    } else {
+                        r#"<strike class="strike">"#
+                    });
+                    prims.strike = !prims.strike;
+                }
+
+                // Other
+                _ => output.push(ch),
+            }
+        }
+
+        // Escape next character
+        if ch == '\\' && !is_escaped {
+            is_escaped = true;
+        } else {
+            is_escaped = false;
+        }
+    }
+
+    output
 }
 
 /// Split string at linebreaks that are not inside 'statements' of curly braces
@@ -106,12 +307,12 @@ fn split_lines_preserve_statements(string: &str) -> Vec<String> {
     // Build variables
     let mut vec = Vec::new();
     let mut build = String::new();
-    let mut in_statement = false;
+    let mut is_statement = false;
 
     for ch in string.chars() {
         match ch {
             // Linebreak - new item if NOT in statement
-            '\n' if !in_statement => {
+            '\n' if !is_statement => {
                 // Add item and reset build
                 if !build.is_empty() {
                     vec.push(build);
@@ -121,8 +322,8 @@ fn split_lines_preserve_statements(string: &str) -> Vec<String> {
             }
 
             // Toggle in_statement status
-            '{' if !in_statement => in_statement = true,
-            '}' if in_statement => in_statement = false,
+            '{' if !is_statement => is_statement = true,
+            '}' if is_statement => is_statement = false,
 
             _ => (),
         }
