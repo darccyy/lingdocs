@@ -1,9 +1,37 @@
 body {
-  background-color: #111;
+  background-color: #222;
   color: white;
   font-family: Arial, Helvetica, sans-serif;
 
-  code {
-    background-color: #000;
+  .language {
+    .name {
+      font-family: monospace;
+      background-color: rgb(66, 66, 105);
+      padding: 0.2em;
+      border-radius: 5px;
+      display: inline-block;
+    }
+
+    .text {
+      font-style: italic;
+    }
+  }
+
+  .ipa {
+    .delim {
+      display: inline-block;
+      font-weight: bold;
+    }
+
+    .text {
+      display: inline-block;
+      margin: 0 0.2em;
+    }
+  }
+
+  .phoner {
+    background-color: #111;
+    padding: 0.4em;
+    border-radius: 5px;
   }
 }

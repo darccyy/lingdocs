@@ -150,20 +150,42 @@ fn format_statements(body: &str) -> String {
 
                     if let Some(curr_statement) = &curr_statement {
                         output.push_str(&match curr_statement {
-                            Text(lang) => format!(
-                                "<span class=\"language\">\
-                                    <span class=\"name\"> {lang} </span>\
+                            Text(lang) if lang.is_empty() => format!(
+                                "<span class=\"language no-name\">\
                                     <span class=\"text\"> {} </span>\
                                 </span>",
                                 stat
+                            ),
+
+                            Text(lang) => format!(
+                                "<span class=\"language with-name\">\
+                                    <span class=\"name\"> {} </span>\
+                                    <span class=\"text\"> {} </span>\
+                                </span>",
+                                lang.trim(),
+                                stat,
                             ),
 
                             Link(link) => {
                                 format!(r#"<a class="link" href="{link}"> {} </a>"#, stat)
                             }
 
-                            BroadIPA => format!(r#"<span class="ipa broad"> /{}/ </span>"#, stat),
-                            NarrowIPA => format!(r#"<span class="ipa narrow"> [{}] </span>"#, stat),
+                            BroadIPA => format!(
+                                "<span class=\"ipa broad\">\
+                                    <span class=\"delim before\"> / </span>\
+                                    <span class=\"text\"> {} </span>\
+                                    <span class=\"delim after\"> / </span>\
+                                </span>",
+                                stat
+                            ),
+                            NarrowIPA => format!(
+                                "<span class=\"ipa narrow\">\
+                                    <span class=\"delim before\"> [ </span>\
+                                    <span class=\"text\"> {} </span>\
+                                    <span class=\"delim after\"> ] </span>\
+                                </span>",
+                                stat
+                            ),
                             Phoner => format!(r#"<code class="phoner"> {} </code>"#, stat),
                             // Double $ to not confuse regex later
                             Table => format!("(&lt;table&gt;){}(&lt;/table&gt;)", stat),
