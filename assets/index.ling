@@ -16,7 +16,7 @@
 
 # syntax examples
 
-{@./DICT.html | link to dict}
+{@./DICT.html link to dict}
 
 *italics*
 ^bold^

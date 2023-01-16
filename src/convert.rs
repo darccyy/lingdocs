@@ -104,7 +104,7 @@ pub fn ling_to_html(file: &str) -> String {
     }
 
     let body = format_statements(&body.join("\n"));
-    
+
     let body = format_primatives(&body);
 
     body
@@ -115,11 +115,12 @@ fn format_statements(body: &str) -> String {
 
     enum Statement {
         Text(String),
+        Link(String),
         BroadIPA,
         NarrowIPA,
         Phoner,
-        Replace,
         Table,
+        Replace,
         Comment,
         Unknown,
     }
@@ -152,15 +153,22 @@ fn format_statements(body: &str) -> String {
                             Text(lang) => format!(
                                 "<span class=\"language\">\
                                     <span class=\"name\"> {lang} </span>\
-                                    <span class=\"text\"> {stat} </span>\
-                                </span>"
+                                    <span class=\"text\"> {} </span>\
+                                </span>",
+                                stat
                             ),
+
+                            Link(link) => {
+                                format!(r#"<a class="link" href="{link}"> {} </a>"#, stat)
+                            }
+
                             BroadIPA => format!(r#"<span class="ipa broad"> /{}/ </span>"#, stat),
                             NarrowIPA => format!(r#"<span class="ipa narrow"> [{}] </span>"#, stat),
                             Phoner => format!(r#"<code class="phoner"> {} </code>"#, stat),
                             // Double $ to not confuse regex later
-                            Replace => format!("{{$${}}}", stat),
                             Table => format!("(&lt;table&gt;){}(&lt;/table&gt;)", stat),
+                            Replace => format!("{{$${}}}", stat),
+
                             Comment => String::new(),
                             Unknown => format!("{}", stat),
                         });
@@ -181,25 +189,28 @@ fn format_statements(body: &str) -> String {
                                     curr_statement_building = true;
                                     Text(String::new())
                                 }
+                                '@' => {
+                                    curr_statement_building = true;
+                                    Link(String::new())
+                                }
                                 '/' => BroadIPA,
                                 '[' => NarrowIPA,
                                 '*' => Phoner,
+                                '|' => Table,
                                 '$' => Replace,
                                 '#' => Comment,
-                                '|' => Table,
                                 _ => Unknown,
                             })
                         } else {
                             //TODO Tidy this cringe code
                             if curr_statement_building {
-                                if let Some(Text(text)) = &mut curr_statement {
-                                    if ch == ' ' {
-                                        curr_statement_building = false;
-                                    } else {
-                                        text.push(ch);
+                                match &mut curr_statement {
+                                    Some(Text(string) | Link(string)) if ch != ' ' => {
+                                        string.push(ch);
                                     }
-                                } else {
-                                    curr_statement_building = false;
+                                    _ => {
+                                        curr_statement_building = false;
+                                    }
                                 }
                             } else {
                                 stat.push(ch);
