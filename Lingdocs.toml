@@ -5,13 +5,13 @@ author = "darcy"
 translations = [["eo", "esperanto"], ["en", "english"]]
 
 [options]
-# minify = false
+minify = false
 
 [files]
 style = "style.scss"
 # build = "./build/"
 # source = "./assets/"
-# main = "index.ling"
+# index = "index.ling"
 # phoner = "phoner"
 # dict = "dict.dlst"
 # template = "template.html"

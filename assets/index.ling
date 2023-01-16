@@ -5,7 +5,6 @@
 {/   broad ipa  }
 {[   narrow ipa }
 {*   phoner     }
-{$   replace    }
 {#   comment    }
 {    no change  }
 
@@ -40,7 +39,7 @@ after list
 ### table
 
 {|
-table   |/ example | header
-these   | are      | cells
+table   |:/ example | header
+these   | are       | cells
 another | row
 }

@@ -91,7 +91,15 @@ pub fn ling_to_html(file: &str) -> String {
             _ => {
                 let s = line.trim();
                 if !s.is_empty() {
-                    Some(format!("<p class=\"line\"> {} </p>\n", escape_html(s)))
+                    //TODO Fix this
+                    if s.starts_with("{|") && s.ends_with('}') {
+                        // For tables
+                        // Don't wrap in p tags
+                        Some(escape_html(s).to_string())
+                    } else {
+                        // Wrap in p tags
+                        Some(format!("<p class=\"line\"> {} </p>\n", escape_html(s)))
+                    }
                 } else {
                     None
                 }
@@ -110,21 +118,89 @@ pub fn ling_to_html(file: &str) -> String {
     body
 }
 
-fn format_statements(body: &str) -> String {
-    use Statement::*;
+#[derive(Debug)]
+enum Format {
+    Text(String),
+    Link(String),
+    BroadIPA,
+    NarrowIPA,
+    Phoner,
+    Table,
+    Replace,
+    Comment,
+    Unknown,
+}
 
-    enum Statement {
-        Text(String),
-        Link(String),
-        BroadIPA,
-        NarrowIPA,
-        Phoner,
-        Table,
-        Replace,
-        Comment,
-        Unknown,
+impl Format {
+    pub fn from(ch: char) -> Self {
+        use Format::*;
+
+        match ch {
+            '\'' => Text(String::new()),
+            '@' => Link(String::new()),
+            '/' => BroadIPA,
+            '[' => NarrowIPA,
+            '*' => Phoner,
+            '|' => Table,
+            '$' => Replace,
+            '#' => Comment,
+            _ => Unknown,
+        }
     }
-    let mut curr_statement: Option<Statement> = None;
+
+    pub fn format(&self, string: &str) -> String {
+        use Format::*;
+
+        match self {
+            Text(lang) if lang.is_empty() => format!(
+                "<span class=\"language no-name\">\
+                    <span class=\"text\"> {} </span>\
+                </span>",
+                string
+            ),
+
+            Text(lang) => format!(
+                "<span class=\"language with-name\">\
+                    <span class=\"name\"> {} </span>\
+                    <span class=\"text\"> {} </span>\
+                </span>",
+                lang.trim(),
+                string,
+            ),
+
+            Link(link) => {
+                format!(r#"<a class="link" href="{link}"> {} </a>"#, string)
+            }
+
+            BroadIPA => format!(
+                "<span class=\"ipa broad\">\
+                    <span class=\"delim before\"> / </span>\
+                    <span class=\"text\"> {} </span>\
+                    <span class=\"delim after\"> / </span>\
+                </span>",
+                string
+            ),
+            NarrowIPA => format!(
+                "<span class=\"ipa narrow\">\
+                    <span class=\"delim before\"> [ </span>\
+                    <span class=\"text\"> {} </span>\
+                    <span class=\"delim after\"> ] </span>\
+                </span>",
+                string
+            ),
+            Phoner => format!(r#"<code class="phoner"> {} </code>"#, string),
+            // Double $ to not confuse regex later
+            Table => format_table(string),
+            Replace => format!("{{$${}}}", string),
+
+            Comment => String::new(),
+            Unknown => format!("{}", string),
+        }
+    }
+}
+
+fn format_statements(body: &str) -> String {
+    let mut curr_statement: Option<Format> = None;
     let mut curr_statement_building = false;
 
     // Build variables
@@ -147,51 +223,7 @@ fn format_statements(body: &str) -> String {
                     let stat = stat.trim();
 
                     if let Some(curr_statement) = &curr_statement {
-                        output.push_str(&match curr_statement {
-                            Text(lang) if lang.is_empty() => format!(
-                                "<span class=\"language no-name\">\
-                                    <span class=\"text\"> {} </span>\
-                                </span>",
-                                stat
-                            ),
-
-                            Text(lang) => format!(
-                                "<span class=\"language with-name\">\
-                                    <span class=\"name\"> {} </span>\
-                                    <span class=\"text\"> {} </span>\
-                                </span>",
-                                lang.trim(),
-                                stat,
-                            ),
-
-                            Link(link) => {
-                                format!(r#"<a class="link" href="{link}"> {} </a>"#, stat)
-                            }
-
-                            BroadIPA => format!(
-                                "<span class=\"ipa broad\">\
-                                    <span class=\"delim before\"> / </span>\
-                                    <span class=\"text\"> {} </span>\
-                                    <span class=\"delim after\"> / </span>\
-                                </span>",
-                                stat
-                            ),
-                            NarrowIPA => format!(
-                                "<span class=\"ipa narrow\">\
-                                    <span class=\"delim before\"> [ </span>\
-                                    <span class=\"text\"> {} </span>\
-                                    <span class=\"delim after\"> ] </span>\
-                                </span>",
-                                stat
-                            ),
-                            Phoner => format!(r#"<code class="phoner"> {} </code>"#, stat),
-                            // Double $ to not confuse regex later
-                            Table => format!("(&lt;table&gt;){}(&lt;/table&gt;)", stat),
-                            Replace => format!("{{$${}}}", stat),
-
-                            Comment => String::new(),
-                            Unknown => format!("{}", stat),
-                        });
+                        output.push_str(&curr_statement.format(stat));
                     } else {
                         output.push_str(&stat);
                     }
@@ -203,28 +235,15 @@ fn format_statements(body: &str) -> String {
                 _ => {
                     if let Some(stat) = &mut statement {
                         if let None = curr_statement {
-                            curr_statement = Some(match ch {
-                                '\'' => {
-                                    curr_statement_building = true;
-                                    Text(String::new())
-                                }
-                                '@' => {
-                                    curr_statement_building = true;
-                                    Link(String::new())
-                                }
-                                '/' => BroadIPA,
-                                '[' => NarrowIPA,
-                                '*' => Phoner,
-                                '|' => Table,
-                                '$' => Replace,
-                                '#' => Comment,
-                                _ => Unknown,
-                            })
+                            curr_statement_building = true;
+                            curr_statement = Some(Format::from(ch));
                         } else {
                             //TODO Tidy this cringe code
                             if curr_statement_building {
                                 match &mut curr_statement {
-                                    Some(Text(string) | Link(string)) if ch != ' ' => {
+                                    Some(Format::Text(string) | Format::Link(string))
+                                        if ch != ' ' =>
+                                    {
                                         string.push(ch);
                                     }
                                     _ => {
@@ -251,6 +270,70 @@ fn format_statements(body: &str) -> String {
     }
 
     output
+}
+
+/// Format table from string
+fn format_table(text: &str) -> String {
+    // Build variables
+    let mut table = Vec::<String>::new();
+    let mut formats = Vec::<Option<Format>>::new();
+
+    for (line_num, line) in text.lines().enumerate() {
+        // Build row
+        let mut row = Vec::<String>::new();
+
+        for (col_num, cell) in line.split("|").enumerate() {
+            if line_num == 0 {
+                // Head
+                // Get format for body cells in same column, from header
+                //TODO Tidy this
+                let mut chars = cell.chars();
+                let mut push_format = None;
+                if cell.starts_with(':') {
+                    chars.next();
+                    if let Some(ch) = chars.next() {
+                        println!("{:?}", Format::from(ch));
+                        push_format = Some(Format::from(ch));
+                    }
+                }
+                formats.push(push_format);
+
+                // Add head cell to row
+                row.push(format!(
+                    "    <th class=\"cell head\"> {} </th>",
+                    chars.as_str().trim()
+                ));
+            } else {
+                // Body
+                // Format from header
+                let text = match formats.get(col_num) {
+                    Some(Some(format)) => format.format(cell),
+                    _ => cell.to_string(),
+                };
+
+                // Add body cell to row
+                row.push(format!("    <td class=\"cell body\"> {} </td>", text.trim()));
+            };
+        }
+
+        // Add row to table
+        table.push(format!(
+            "  <tr class=\"row\">\n\
+                {}\n  </tr>\
+        ",
+            row.join("\n")
+        ));
+    }
+
+    // Return table
+    format!(
+        "\
+        \n<table class=\"table\">\n\
+            {}\n\
+        </table>\n\
+    ",
+        table.join("\n")
+    )
 }
 
 fn format_primatives(body: &str) -> String {

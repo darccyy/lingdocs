@@ -34,4 +34,11 @@ body {
     padding: 0.4em;
     border-radius: 5px;
   }
+
+  .table {
+    .cell {
+      padding: 10px;
+      outline: 1px solid gray;
+    }
+  }
 }

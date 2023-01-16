@@ -41,7 +41,7 @@ impl Default for Options {
 pub struct Files {
     pub build: String,
     pub source: String,
-    pub main: String,
+    pub index: String,
     pub phoner: String,
     pub dict: String,
     pub template: String,
@@ -53,7 +53,7 @@ impl Default for Files {
         Files {
             build: String::from("./build/"),
             source: String::from("./assets/"),
-            main: String::from("index.ling"),
+            index: String::from("index.ling"),
             phoner: String::from("phoner"),
             dict: String::from("dict.dlst"),
             template: String::from("template.html"),
