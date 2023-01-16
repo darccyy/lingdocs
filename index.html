@@ -10,41 +10,39 @@
     <!-- <link rel="stylesheet" type="text/css" href="./style.css" /> -->
   </head>
   <body>
-    <h2>  brackets example </h2>
-<p> {'   any text   } </p>
-<p> {'iv lang text  } </p>
-<p> {/   broad ipa  } </p>
-<p> {[   narrow ipa } </p>
-<p> {*   phoner     } </p>
-<p> {$   replace    } </p>
-<p> {#   comment    } </p>
-<p> {    no change  } </p>
-<p> {'iv
-  multi line
-  text
-} </p>
-<h2>  syntax examples </h2>
-<p> {@./DICT.html | link to dict} </p>
-<p> *italics* </p>
-<p> ^bold^ </p>
-<p> _underline_ </p>
-<p> ~strike~ </p>
-<p> \*escaped\* </p>
-<h3>  lists </h3>
-<ol><li>  ordered list </li>
-<li>  second item </li>
+    <h1 class="header">  brackets example </h1>
+<p class="line"> <span class="language"><span class="name">  </span><span class="text"> any text </span></span> </p>
+<p class="line"> <span class="language"><span class="name"> iv </span><span class="text"> lang text </span></span> </p>
+<p class="line"> <span class="ipa broad"> /broad ipa/ </span> </p>
+<p class="line"> <span class="ipa narrow"> [narrow ipa] </span> </p>
+<p class="line"> <code class="phoner"> phoner </code> </p>
+<p class="line"> {$replace} </p>
+<p class="line">  </p>
+<p class="line"> no change </p>
+<p class="line"> <span class="language"><span class="name"> iv
+ </span><span class="text"> multi line
+  text </span></span> </p>
+<h1 class="header">  syntax examples </h1>
+<p class="line"> ./DICT.html | link to dict </p>
+<p class="line"> <i class="italics">italics</i> </p>
+<p class="line"> <b class="bold">bold</b> </p>
+<p class="line"> <u class="underline">underline</u> </p>
+<p class="line"> <strike class="strike">strike</strike> </p>
+<p class="line"> <i class="italics">escaped</i> </p>
+<h2 class="header">  lists </h2>
+<ol class="list">
+<li class="item">  ordered list </li>
+<li class="item">  second item </li>
 </ol>
-<ul>
+<ul class="list">
 <li>  unordered list </li>
 <li>  second item </li>
 </ul>
-<p> after list </p>
+<p class="line"> after list </p>
 <hr />
-<h4>  table </h4>
-<p> {|
-table   |/ example | header
+<h3 class="header">  table </h3>
+<p class="line"> (&lt;table&gt;)table   |/ example | header
 these   | are      | cells
-another | row
-} </p>
+another | row(&lt;/table&gt;) </p>
   </body>
 </html>
