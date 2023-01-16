@@ -1,0 +1,44 @@
+# brackets example
+
+{'   any text   }
+{'iv lang text  }
+{/   broad ipa  }
+{[   narrow ipa }
+{<   phoner     }
+{$   replace    }
+{#   comment    }
+{    no change  }
+
+{'iv
+  multi line
+  text
+}
+
+# syntax examples
+
+<link to dict | ./DICT.html>
+
+*italics*
+^bold^
+_underline_
+~strike~
+
+\*escaped\*
+
+## lists
+
+. ordered list
+. second item
+
+- unordered list
+- second item
+
+---
+
+### table
+
+{|
+table   |/ example | header
+these   | are      | cells
+another | row
+}

@@ -1,0 +1,12 @@
+[package]
+name = "ivalingo"
+code = "iv"
+author = "darcy"
+translations = [["eo", "esperanto"], ["en", "english"]]
+
+[files]
+build = "./build/"
+src = "./assets/"
+main = "main.ling"
+phoner = "phoner"
+dict = "dict.dlst"
