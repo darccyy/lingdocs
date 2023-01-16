@@ -15,14 +15,11 @@
 
 # syntax examples
 
-{@./DICT.html link to dict}
+{@./other.ling link to other file}
 
 {@#lists id link}
 
-*italics*
-^bold^
-_underline_
-~strike~
+*italics* ^bold^ _underline_ ~strike~
 
 \*escaped\*
 

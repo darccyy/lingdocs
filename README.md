@@ -4,5 +4,5 @@
 
 # TODO
 
-- Allow non-relative directories
+- Use `~` for root directory
 - Use macro package for defaults in config.rs

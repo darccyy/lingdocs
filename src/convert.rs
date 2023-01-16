@@ -1,7 +1,7 @@
 use html_escape::encode_text as escape_html;
 use regex::Regex;
 
-use crate::case;
+use crate::{case, utils::separate_filename_ext};
 
 pub fn ling_to_html(file: &str) -> String {
     use ListType::*;
@@ -172,7 +172,11 @@ impl Format {
             ),
 
             Link(link) => {
-                format!(r#"<a class="link" href="{link}"> {} </a>"#, string)
+                format!(
+                    r#"<a class="link" href="{}"> {} </a>"#,
+                    format_link(link),
+                    string
+                )
             }
 
             BroadIPA => format!(
@@ -200,6 +204,23 @@ impl Format {
             Unknown => format!("{}", string),
         }
     }
+}
+
+/// Format link
+/// 
+/// Replaces `.ling` with `.html` file extension
+fn format_link(link: &str) -> String {
+    let (filename, mut ext) = separate_filename_ext(link);
+
+    if ext.is_empty() {
+        return filename;
+    }
+
+    if ext == "ling" {
+        ext = "html";
+    }
+
+    filename + "." + ext
 }
 
 fn format_statements(body: &str) -> String {
@@ -314,7 +335,10 @@ fn format_table(text: &str) -> String {
                 };
 
                 // Add body cell to row
-                row.push(format!("    <td class=\"cell body\"> {} </td>", text.trim()));
+                row.push(format!(
+                    "    <td class=\"cell body\"> {} </td>",
+                    text.trim()
+                ));
             };
         }
 
