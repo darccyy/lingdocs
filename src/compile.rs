@@ -5,8 +5,10 @@ use regex::Regex;
 use crate::{case, convert, utils::separate_filename_ext, Config, MyError};
 
 pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
-    // Remove build directory
-    fs::remove_dir_all(&config.files.build)?;
+    // Remove build directory recursively if exists
+    if Path::new(&config.files.build).exists() {
+        fs::remove_dir_all(&config.files.build)?;
+    }
     // Create new build directory
     fs::create_dir(&config.files.build)?;
 
