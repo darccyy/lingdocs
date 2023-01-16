@@ -1,7 +1,7 @@
 use html_escape::encode_text as escape_html;
 use regex::Regex;
 
-// use ListType::*;
+use ListType::*;
 
 /// Kind of HTML list
 #[allow(dead_code)]
@@ -17,7 +17,7 @@ pub fn ling_to_html(file: &str) -> String {
 
     // Build values
     let mut body = Vec::<String>::new();
-    // let curr_list = NoList;
+    let mut curr_list = NoList;
 
     // Loop lines in file
     let lines = split_lines_preserve_statements(&file);
@@ -30,10 +30,18 @@ pub fn ling_to_html(file: &str) -> String {
         };
 
         // Add closing list tag, if token does not match with list pattern
-        // if token == "." || token == "-" {}
+        if token != "." && token != "-" {
+            match curr_list {
+                NoList => (),
+                Unordered => body.push("</ol>".to_string()),
+                Ordered => body.push("</ul>".to_string()),
+            }
+            curr_list = NoList;
+        }
 
         // Add tags if token matches
         //TODO Use lazy_static for instances of Regex::new - Add error message
+        //TODO Add classes
         let maybe_push = match token {
             // Header
             c if Regex::new(r"^#+$").unwrap().is_match(&c) => Some(format!(
@@ -41,6 +49,38 @@ pub fn ling_to_html(file: &str) -> String {
                 escape_html(rest),
                 d = c.len() + 1,
             )),
+
+            // Quote or note
+            ">" => Some(format!("<blockquote> {} </blockquote>", escape_html(rest))),
+
+            // Hr
+            "---" => Some("<hr />".to_string()),
+
+            // Unordered list
+            "-" => {
+                // Add opening list tag if not active, and close other previous list if active
+                let parent = match curr_list {
+                    NoList => "<ul>",
+                    Ordered => "",
+                    Unordered => "</ol>\n<ul>\n",
+                };
+                curr_list = Ordered;
+
+                Some(format!("{parent}<li> {} </li>", escape_html(rest)))
+            }
+
+            // Ordered list
+            "." => {
+                // Add opening list tag if not active, and close other previous list if active
+                let parent = match curr_list {
+                    NoList => "<ol>",
+                    Ordered => "</ul>\n<ol>\n",
+                    Unordered => "",
+                };
+                curr_list = Unordered;
+
+                Some(format!("{parent}<li> {} </li>", escape_html(rest)))
+            }
 
             // Normal line
             _ => {
