@@ -137,8 +137,6 @@ fn format_statements(body: &str) -> String {
             output.push(ch);
         } else {
             match ch {
-                '\\' => (),
-
                 '{' if statement.is_none() => {
                     statement = Some(String::new());
                 }
