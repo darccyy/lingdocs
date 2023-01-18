@@ -46,8 +46,8 @@ after list
 ### table
 
 {|
-table   |:/ example |:' header
-these   | are       | cells
+table   |/example |'header
+these   | are     | cells
 another | row
 }
 

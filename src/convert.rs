@@ -325,8 +325,7 @@ fn format_table(text: &str) -> String {
                 //TODO Tidy this
                 let mut chars = cell.chars();
                 let mut push_format = None;
-                if cell.starts_with(':') {
-                    chars.next();
+                if !cell.starts_with(' ') {
                     if let Some(ch) = chars.next() {
                         push_format = Some(Format::from(ch));
                     }
