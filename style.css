@@ -13,6 +13,9 @@ body .language .name {
 body .language .text {
   font-style: italic;
 }
+body .language .text.multiline {
+  line-height: 200%;
+}
 body .ipa .delim {
   display: inline-block;
   font-weight: bold;
