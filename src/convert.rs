@@ -135,10 +135,14 @@ enum Format {
 }
 
 impl Format {
-    pub fn from(ch: char) -> Self {
+    pub fn new(ch: char) -> Self {
+        Self::from(ch).unwrap_or(Format::Unknown)
+    }
+
+    pub fn from(ch: char) -> Option<Self> {
         use Format::*;
 
-        match ch {
+        Some(match ch {
             '\'' => Text(String::new()),
             '@' => Link(String::new()),
             '/' => BroadIPA,
@@ -147,8 +151,8 @@ impl Format {
             '|' => Table,
             '$' => Replace,
             '#' => Comment,
-            _ => Unknown,
-        }
+            _ => return None,
+        })
     }
 
     pub fn format(&self, string: &str) -> String {
@@ -159,7 +163,11 @@ impl Format {
                 "<span class=\"language no-name\">\
                     <span class=\"text {}\"> {} {} </span>\
                 </span>",
-                if string.contains('\n') { "multiline" } else { "" },
+                if string.contains('\n') {
+                    "multiline"
+                } else {
+                    ""
+                },
                 if string.contains('\n') { "<br>" } else { "" },
                 string.replace('\n', "<br>")
             ),
@@ -170,7 +178,11 @@ impl Format {
                     <span class=\"text {}\"> {} {} </span>\
                 </span>",
                 lang.trim(),
-                if string.contains('\n') { "multiline" } else { "" },
+                if string.contains('\n') {
+                    "multiline"
+                } else {
+                    ""
+                },
                 if string.contains('\n') { "<br>" } else { "" },
                 string.replace('\n', "<br>")
             ),
@@ -276,7 +288,7 @@ fn format_statements(body: &str) -> String {
                     if let Some(stat) = &mut statement {
                         if let None = curr_statement {
                             curr_statement_building = true;
-                            curr_statement = Some(Format::from(ch));
+                            curr_statement = Some(Format::new(ch));
                         } else {
                             //TODO Tidy this cringe code
                             if curr_statement_building {
@@ -326,20 +338,25 @@ fn format_table(text: &str) -> String {
             if line_num == 0 {
                 // Head
                 // Get format for body cells in same column, from header
-                //TODO Tidy this
+
                 let mut chars = cell.chars();
-                let mut push_format = None;
-                if !cell.starts_with(' ') {
-                    if let Some(ch) = chars.next() {
-                        push_format = Some(Format::from(ch));
+                // If has first character
+                formats.push(if let Some(first) = cell.chars().next() {
+                    // None if not a valid format character
+                    let format = Format::from(first);
+                    // If first character is format character
+                    if format.is_some() {
+                        chars.next();
                     }
-                }
-                formats.push(push_format);
+                    format
+                } else {
+                    None
+                });
 
                 // Add head cell to row
                 row.push(format!(
                     "    <th class=\"cell head\"> {} </th>",
-                    chars.as_str().trim()
+                    chars.as_str().trim() // cell.trim()
                 ));
             } else {
                 // Body
