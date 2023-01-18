@@ -73,6 +73,10 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
                 }
             }
 
+            //TODO
+            "ldct" => continue,
+            "llst" => continue,
+
             "html" | "css" | "scss" => continue,
 
             _ => return Err(Box::new(MyError("Unknown file type".to_string()))),

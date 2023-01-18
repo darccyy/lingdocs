@@ -1,10 +1,18 @@
 # brackets example
 
+{c}
+{'}
+{'a}
+{' b}
+{'a b}
+
+{* ! (a|b)? <A> ;}
+
 {'   any text   }
 {'iv lang text  }
 {/   broad ipa  }
 {[   narrow ipa }
-{*   phoner     }
+{*   phoner   ; }
 {#   comment    }
 {    no change  }
 

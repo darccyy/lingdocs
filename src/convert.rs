@@ -195,7 +195,19 @@ impl Format {
                 </span>",
                 string
             ),
-            Phoner => format!(r#"<code class="phoner"> {} </code>"#, string),
+            Phoner => {
+                let string = string.trim();
+
+                format!(
+                    r#"<code class="phoner"> {} </code>"#,
+                    // Remove semicolon if is last character
+                    if string.ends_with(';') {
+                        remove_last_char(string).trim()
+                    } else {
+                        string
+                    }
+                )
+            }
             // Double $ to not confuse regex later
             Table => format_table(string),
             Replace => format!("{{$${}}}", string),
@@ -207,7 +219,7 @@ impl Format {
 }
 
 /// Format link
-/// 
+///
 /// Replaces `.ling` with `.html` file extension
 fn format_link(link: &str) -> String {
     let (filename, mut ext) = separate_filename_ext(link);
@@ -479,9 +491,22 @@ fn split_lines_preserve_statements(string: &str) -> Vec<String> {
     vec
 }
 
+fn remove_last_char(s: &str) -> &str {
+    let mut chars = s.chars();
+    chars.next_back();
+    chars.as_str()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::split_lines_preserve_statements as slps;
+    use super::{remove_last_char as rlc, split_lines_preserve_statements as slps};
+
+    #[test]
+    fn remove_last_char_works() {
+        assert_eq!(rlc("abc"), "ab");
+        assert_eq!(rlc("a"), "");
+        assert_eq!(rlc(""), "");
+    }
 
     #[test]
     fn split_lines_preserve_statements_works() {
