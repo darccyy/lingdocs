@@ -14,6 +14,10 @@ body {
 
     .text {
       font-style: italic;
+
+      &.multiline {
+        line-height: 200%;
+      }
     }
   }
 

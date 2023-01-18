@@ -157,18 +157,22 @@ impl Format {
         match self {
             Text(lang) if lang.is_empty() => format!(
                 "<span class=\"language no-name\">\
-                    <span class=\"text\"> {} </span>\
+                    <span class=\"text {}\"> {} {} </span>\
                 </span>",
-                string
+                if string.contains('\n') { "multiline" } else { "" },
+                if string.contains('\n') { "<br>" } else { "" },
+                string.replace('\n', "<br>")
             ),
 
             Text(lang) => format!(
                 "<span class=\"language with-name\">\
                     <span class=\"name\"> {} </span>\
-                    <span class=\"text\"> {} </span>\
+                    <span class=\"text {}\"> {} {} </span>\
                 </span>",
                 lang.trim(),
-                string,
+                if string.contains('\n') { "multiline" } else { "" },
+                if string.contains('\n') { "<br>" } else { "" },
+                string.replace('\n', "<br>")
             ),
 
             Link(link) => {
