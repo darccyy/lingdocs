@@ -137,6 +137,6 @@ fn use_template_html(file: String, template: &Option<String>, config: &Config) -
             .to_string();
         html
     } else {
-        file
+        format!("<!DOCTYPE html> <html> <body> {} </body> </html>", file)
     }
 }
