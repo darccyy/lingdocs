@@ -43,7 +43,10 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
     }
 
     let mut files: Vec<(String, String)> = Vec::new();
-    for entry in fs::read_dir(&config.files.source).expect("Could not read source directory").flatten() {
+    for entry in fs::read_dir(&config.files.source)
+        .expect("Could not read source directory")
+        .flatten()
+    {
         // Throw if not file
         if !entry.path().is_file() {
             return Err(Box::new(MyError(
@@ -59,11 +62,18 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
         };
 
         // Add file to list
-        files.push((filename, fs::read_to_string(entry.path()).expect("Could not read source file")));
+        files.push((
+            filename,
+            fs::read_to_string(entry.path()).expect("Could not read source file"),
+        ));
     }
 
     for (filepath, file) in &mut files {
-        let (filepath_no_ext, ext) = separate_filename_ext(filepath);
+        let (filepath_no_ext, ext) = if filepath == "phonet" {
+            ("".to_string(), "phonet")
+        } else {
+            separate_filename_ext(filepath)
+        };
 
         match ext {
             "ling" => {
@@ -78,13 +88,15 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
             //TODO
             "ldct" => continue,
             "llst" => continue,
+            "phonet" => continue,
 
             "html" | "css" | "scss" => continue,
 
             _ => return Err(Box::new(MyError("Unknown file type".to_string()))),
         }
-        
-        fs::write(format!("{}/{}", config.files.build, filepath), file).expect("Could not write build file");
+
+        fs::write(format!("{}/{}", config.files.build, filepath), file)
+            .expect("Could not write build file");
     }
 
     Ok(())
