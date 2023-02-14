@@ -7,22 +7,23 @@ use crate::{case, convert, utils::separate_filename_ext, Config, MyError};
 pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
     // Remove build directory recursively if exists
     if Path::new(&config.files.build).exists() {
-        fs::remove_dir_all(&config.files.build)?;
+        fs::remove_dir_all(&config.files.build).expect("Could not delete build directory");
     }
     // Create new build directory
-    fs::create_dir(&config.files.build)?;
+    fs::create_dir(&config.files.build).expect("Could not create build directory");
 
     // Template file
     let path = format!("{}/{}", config.files.source, config.files.template);
     let template_html = if Path::new(&path).exists() {
-        Some(fs::read_to_string(&path)?)
+        Some(fs::read_to_string(&path).expect("Could not read template file"))
     } else {
         None
     };
 
     // Convert scss to css
     if let Some(filepath) = &config.files.style {
-        let scss = fs::read_to_string(format!("{}/{}", config.files.source, filepath))?;
+        let scss = fs::read_to_string(format!("{}/{}", config.files.source, filepath))
+            .expect("Could not read scss file");
         let css = grass::from_string(scss, &grass::Options::default())?;
 
         // Minify
@@ -37,11 +38,12 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
         fs::write(
             format!("{}/{}.css", config.files.build, filepath_no_ext),
             css,
-        )?;
+        )
+        .expect("Could not write css file");
     }
 
     let mut files: Vec<(String, String)> = Vec::new();
-    for entry in fs::read_dir(&config.files.source)?.flatten() {
+    for entry in fs::read_dir(&config.files.source).expect("Could not read source directory").flatten() {
         // Throw if not file
         if !entry.path().is_file() {
             return Err(Box::new(MyError(
@@ -57,7 +59,7 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
         };
 
         // Add file to list
-        files.push((filename, fs::read_to_string(entry.path())?));
+        files.push((filename, fs::read_to_string(entry.path()).expect("Could not read source file")));
     }
 
     for (filepath, file) in &mut files {
@@ -81,7 +83,8 @@ pub fn compile(config: Config) -> Result<(), Box<dyn Error>> {
 
             _ => return Err(Box::new(MyError("Unknown file type".to_string()))),
         }
-        fs::write(format!("{}/{}", config.files.build, filepath), file)?;
+        
+        fs::write(format!("{}/{}", config.files.build, filepath), file).expect("Could not write build file");
     }
 
     Ok(())

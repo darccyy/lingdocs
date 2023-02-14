@@ -1,5 +1,5 @@
 use lingdocs::run;
 
 fn main() {
-    run(".").expect("Failed");
+    run("./example").expect("Failed");
 }

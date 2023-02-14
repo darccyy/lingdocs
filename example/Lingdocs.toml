@@ -10,7 +10,7 @@ minify = false
 [files]
 style = "style.scss"
 # build = "./build/"
-# source = "./assets/"
+# source = "./src/"
 # index = "index.ling"
 # phoner = "phoner"
 # dict = "dict.dlst"

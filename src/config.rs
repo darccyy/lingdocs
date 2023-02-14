@@ -52,7 +52,7 @@ impl Default for Files {
     fn default() -> Self {
         Files {
             build: String::from("./build/"),
-            source: String::from("./assets/"),
+            source: String::from("./src/"),
             index: String::from("index.ling"),
             phoner: String::from("phoner"),
             dict: String::from("dict.dlst"),
