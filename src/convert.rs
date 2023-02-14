@@ -129,6 +129,8 @@ enum Format {
     NarrowIPA,
     Phoner,
     Table,
+    /// For tables
+    HeaderBold,
     Replace,
     Comment,
     Unknown,
@@ -147,8 +149,9 @@ impl Format {
             '@' => Link(String::new()),
             '/' => BroadIPA,
             '[' => NarrowIPA,
-            '*' => Phoner,
+            ';' => Phoner,
             '|' => Table,
+            '^' => HeaderBold,
             '$' => Replace,
             '#' => Comment,
             _ => return None,
@@ -211,6 +214,7 @@ impl Format {
                 </span>",
                 string
             ),
+
             Phoner => {
                 let string = string.trim();
 
@@ -224,8 +228,14 @@ impl Format {
                     }
                 )
             }
-            // Double $ to not confuse regex later
+
             Table => format_table(string),
+
+            HeaderBold => {
+                format!(r#"<b> {} </b>"#, string)
+            }
+
+            // Double $ to not confuse regex later
             Replace => format!("{{$${}}}", string),
 
             Comment => String::new(),
